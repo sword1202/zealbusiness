@@ -14,6 +14,8 @@ import SquarePointOfSaleSDK
 import SwiftSpinner
 import Alamofire
 
+var deviceuidString = "initial value"
+var cardsForThisDevice = NSMutableArray()
 let locationID = "F3EX7FBKDMY0E" // there is an id at the moment
 let accessToken = "sq0atp-wXX9R-mHWTTSQtcLhwKQbw"
 let headerStr = "Bearer " + accessToken
@@ -30,12 +32,30 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 
         FirebaseApp.configure()
-//        GIDSignIn.sharedInstance().clientID = FirebaseApp.app()?.options.clientID
-//        GIDSignIn.sharedInstance().delegate = self
         
-        // test Creating Customer in SquareUp
-//        self.grabDetailsByLast4Digits(last4digits: "1006")
+        deviceuidString = UIDevice.current.identifierForVendor!.uuidString
+        print(cardsForThisDevice)
+        scanCustomersDB()
+
         return true
+    }
+        
+    func scanCustomersDB() {
+        let usersRef = Database.database().reference(withPath: "customers")
+        
+        let urlForCustomersDetails = "https://connect.squareup.com/v2/customers"
+        
+        Alamofire.request(urlForCustomersDetails, headers: headers).responseJSON { response in
+            guard (response.error == nil) else {
+                //                print(response.error?.localizedDescription)
+                return
+            }
+            
+            let responseObj = response.value as! [String:Any]
+            let customers = responseObj["customers"] as! NSArray
+            usersRef.setValue(customers)
+        }
+        
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplicationOpenURLOptionsKey : Any] = [:]) -> Bool {
