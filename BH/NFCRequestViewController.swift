@@ -25,38 +25,36 @@ let yourCallbackURL = URL(string: "bhdesign://callback")!
 let allTenderTypes: [SCCAPIRequestTenderTypes] = [.card, .cash, .other, .squareGiftCard, .cardOnFile]
 
 
-class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPickerViewDataSource {
+class NFCRequestViewController: UIViewController {
     
     
     var supportedTenderTypes: SCCAPIRequestTenderTypes = .card
     var clearsDefaultFees = false
     var returnAutomaticallyAfterPayment = true
     var transactions = [Transaction]()
-    var ordersArray = NSArray()
-    var orderPickerData = NSMutableArray()
-    var selectedOrderRow = Int(0)
-    var isSelectedBank = Bool()
+    var ordersArray = NSMutableArray()
+    var failedCount = Int()
     var customerid     = String()
     var cardid         = String()
     var isExistCard    = Bool()
+    var isSuccess      = Bool()
+    let myGroup = DispatchGroup()
+    
+    var successMsg = String()
     
     var customerArr = NSArray()
     var customerID = String()
     var cardID = String()
+    
+    var totalAmount = Int(0)
 
     @IBOutlet weak var signoutbtn: UIButton!
 
-    @IBOutlet weak var orderPicker: UIPickerView!
-    @IBOutlet weak var picker: UIPickerView!
     @IBOutlet weak var homebtn: UIButton!
     @IBOutlet weak var requestbtn: UIButton!
     @IBOutlet weak var uv_instruction: UIView!
     @IBOutlet weak var uv_mainView: UIView!
     @IBOutlet weak var label_clickstart: UILabel!
-    @IBOutlet weak var pickercontainer: UIView!
-    @IBOutlet weak var done_pickerviewbtn: UIButton!
-    @IBOutlet weak var selectedBankLabel: UILabel!
-    @IBOutlet weak var selectedOrderLabel: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -66,55 +64,37 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
         requestbtn.layer.cornerRadius=5
         homebtn.layer.cornerRadius=5
         
-        self.picker.delegate = self
-        self.picker.dataSource = self
         
         SCCAPIRequest.setClientID(yourClientID)
         NotificationCenter.default.addObserver(self, selector: #selector(transactionDone), name: NSNotification.Name(rawValue: "TransactionDone"), object: nil)
-//        guard let uid = FIRAuth.auth()?.currentUser?.uid, let email = FIRAuth.auth()?.currentUser?.email else {
-//            return
-//        }
+
         showPOSLoginAlertIfFirstLogin()
         
-//        getTransactions(for: User(uid: uid, emailId: email))
-        
-
-        // Do any additional setup after loading the view.
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        requestbtn.isEnabled = false
-        requestbtn.alpha = 0.3
-        label_clickstart.isHidden = true
-        pickercontainer.isHidden = true
-        orderPicker.isHidden = true
-        picker.isHidden = false
+        isSuccess = false
         
-        selectedBankLabel.text = ""
-        selectedOrderLabel.text = ""
-        
-        let cardsRef = Database.database().reference(withPath: "cards").child(deviceuidString)
-        
-        cardsRef.observeSingleEvent(of: .value, with: { (snapshot) in
-            
-            self.requestbtn.isEnabled = true
-            self.requestbtn.alpha = 1.0
-            self.label_clickstart.isHidden = false
-            
-            if !snapshot.exists() {
-                return
-            }
-            
-            cardsForThisDevice = (snapshot.value as? NSMutableArray)!
-            self.picker.reloadAllComponents()
-            
-        }) { (error) in print(error.localizedDescription) }
+        // test
+//        if currentCardsNum != "" {
+//            // select cards
+//
+//            findOrdersByCardNumber()
+//
+//        }
     }
     
     @objc func transactionDone(){
-        afterTransaction()
+        if currentCardsNum != "" {
+            // select cards
+            
+            findOrdersByCardNumber()
+            
+        } else{
+            afterTransaction()
+        }
     }
     
     func afterTransaction() {
@@ -144,24 +124,13 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
         requestbtn.isEnabled = false
         requestbtn.alpha = 0.3
         
-        if cardsForThisDevice.count > 0 {
-            // select cards
-            isSelectedBank = false
-            pickercontainer.isHidden = false
-            selectedBankLabel.text = cardsForThisDevice[0] as? String
+        // make test charge
+        let when = DispatchTime.now() + 4
+        DispatchQueue.main.asyncAfter(deadline: when) {
             
-            done_pickerviewbtn.setTitle("Continue", for: .normal)
+            // process of squareup transaction here
             
-        } else
-        {
-            // make test charge
-            let when = DispatchTime.now() + 4
-            DispatchQueue.main.asyncAfter(deadline: when) {
-                
-                // process of squareup transaction here
-                
-                self.charge();
-            }
+            self.charge();
         }
         
     }
@@ -177,6 +146,8 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
         self.navigationController?.popToRootViewController(animated: true)
     }
     func charge() {
+        
+        currentCardsNum = ""
         
         let amount: SCCMoney
         guard let amountCents = Int("100") else {
@@ -196,7 +167,7 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
         }
         
         let userInfoString: String? = "Useful information"//userInfoStringField.text?.nilIfEmpty
-        let merchantID: String? = nil//merchantIDField.text?.nilIfEmpty
+//        let merchantID: String? = location_ID//merchantIDField.text?.nilIfEmpty
         let customerID: String? = nil//customerIDField.text?.nilIfEmpty
         let notes: String? = "Test Charge"//notesField.text?.nilIfEmpty
         
@@ -205,7 +176,7 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
             request = try SCCAPIRequest(callbackURL                    : yourCallbackURL,
                                         amount                         : amount,
                                         userInfoString                 : userInfoString,
-                                        locationID                     : merchantID,
+                                        locationID                     : location_ID,
                                         notes                          : notes,
                                         customerID                     : customerID,
                                         supportedTenderTypes           : supportedTenderTypes,
@@ -252,132 +223,51 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
         }
     }
     
-    //MARK:- UIPickerViewDataSource methods
-    func numberOfComponents(in pickerView: UIPickerView) -> Int {
-        return 1
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
-        if pickerView.tag == 2 {
-            return orderPickerData.count
-        }
-        return cardsForThisDevice.count
-    }
-    
-    //MARK:- UIPickerViewDelegates methods
-    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
-
-        if pickerView.tag == 2
-        {
-            return orderPickerData[row] as? String
-        } else {
-            return cardsForThisDevice[row] as? String
-        }
-    }
-    
-    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
-        if pickerView.tag == 2
-        {
-            selectedOrderLabel.text = orderPickerData[row] as? String
-            selectedOrderRow = row
-            
-        } else {
-            selectedBankLabel.text = cardsForThisDevice[row] as? String
-        }
-//        print(cardsForThisDevice.object(at: row))
-    }
-
-    func pickerView(_ pickerView: UIPickerView, viewForRow row: Int, forComponent component: Int, reusing view: UIView?) -> UIView {
-        var pickerLabel: UILabel? = (view as? UILabel)
-        if pickerLabel == nil {
-            pickerLabel = UILabel()
-            pickerLabel?.font = UIFont(name: "Courier New", size: 50)
-            pickerLabel?.textAlignment = .center
-//            print(UIFont.familyNames)
-        }
+    func findOrdersByCardNumber() {
+        // find orders for selected card number
         
-        if pickerView.tag == 2 {
-            pickerLabel?.text = orderPickerData[row] as? String
-        } else {
-            pickerLabel?.text = cardsForThisDevice[row] as? String
-        }
+        let ordersRef = Database.database().reference(withPath: "orders").child(currentCardsNum)
         
-        pickerLabel?.textColor = UIColor.white
-        
-        return pickerLabel!
+        ordersRef.observeSingleEvent(of: .value, with: { (snapshot) in
+            
+            if !snapshot.exists() {
+                // no orders yet
+                self.showToast(message: "There is no orders for \(currentCardsNum) yet.")
+                return
+            }
+            
+            self.ordersArray = (snapshot.value as? NSMutableArray)!
+            
+            self.findCustomerbyCard()
+            
+        }) { (error) in print(error.localizedDescription) }
     }
     
-    @IBAction func didSelectDone(_ sender: Any) {
-        if !isSelectedBank {
-            
-            // find orders for selected card number
-            
-            let ordersRef = Database.database().reference(withPath: "orders").child(selectedBankLabel.text!)
-            
-            ordersRef.observeSingleEvent(of: .value, with: { (snapshot) in
-                
-                if !snapshot.exists() {
-                    // no orders yet
-                    self.showToast(message: "There is no orders for " + self.selectedBankLabel.text! + " yet.")
-                    return
+    func findCustomerbyCard() {
+        isExistCard = false
+        
+        let customersRef = Database.database().reference(withPath: "customers")
+        customersRef.observeSingleEvent(of: .value, with: { (snapshot) in
+            if snapshot.exists() {
+                self.customerArr = (snapshot.value as? NSArray)!
+                self.handleCustomers()
+                if !self.isExistCard {
+                    self.noCard()
+                } else
+                {
+                    self.chargeForOder()
+                    self.isExistCard = false
                 }
                 
-                self.ordersArray = (snapshot.value as? NSArray)!
-                
-                for i in 0 ..< self.ordersArray.count {
-                    let everyOrderDic = self.ordersArray[i] as? NSDictionary
-                    
-                    let lineItems = everyOrderDic!["line_items"] as? NSArray
-                    let lineItem0 = lineItems![0] as? NSDictionary
-                    let itemName = lineItem0!["name"] as? String
-                    self.orderPickerData.add(itemName ?? "")
-                    
-                }
-                
-                self.selectedOrderLabel.text = self.orderPickerData[0] as? String
-
-                self.picker.isHidden = true
-                
-                self.orderPicker.delegate = self
-                self.orderPicker.dataSource = self
-                
-                self.orderPicker.isHidden = false
-                
-                self.selectedOrderRow = 0
-                
-                self.done_pickerviewbtn.setTitle("Charge", for: .normal)
-                self.isSelectedBank = true
-                
-                
-            }) { (error) in print(error.localizedDescription) }
-            
-        } else
-        {
-            isExistCard = false
-            
-            let customersRef = Database.database().reference(withPath: "customers")
-            customersRef.observeSingleEvent(of: .value, with: { (snapshot) in
-                    if snapshot.exists() {
-                        self.customerArr = (snapshot.value as? NSArray)!
-                        self.handleCustomers()
-                        if !self.isExistCard {
-                            self.noCard()
-                        }
-                        
-                        self.chargeForOder()
-                        
-                    } else
-                    {
-                        self.noCard()
-                    }
-                })
-            
-        }
+            } else
+            {
+                self.noCard()
+            }
+        })
     }
     
     func noCard() {
         showToast(message: "There is no card resource in Customers.")
-        pickercontainer.isHidden = true
         requestbtn.isEnabled = true
         requestbtn.alpha = 1.0
         return
@@ -394,9 +284,10 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
                     let everyCard = cardsArr.object(at: j) as? NSDictionary
                     cardid = everyCard?.object(forKey: "id") as! String
                     let last4digits = everyCard?.object(forKey: "last_4") as? String
-                    if last4digits == selectedBankLabel.text {
+                    if last4digits == currentCardsNum {
                         // charge
                         print("Cardid: \(cardid) Customerid: \(customerID)")
+                        
                         isExistCard = true
                         break
                     }
@@ -407,39 +298,108 @@ class NFCRequestViewController: UIViewController, UIPickerViewDelegate, UIPicker
     
     func chargeForOder() {
         // start charge with the order
-        let selectedOrderDic = ordersArray[selectedOrderRow] as? NSDictionary
         
-        let orderId = selectedOrderDic!["id"] as! String
-        let locationid = selectedOrderDic!["location_id"] as! String
-        let amountMoneyArray = selectedOrderDic!["total_money"] as! NSDictionary
- 
-        let itemName = orderPickerData[selectedOrderRow] as! String
-        let note = "\(itemName)  Order"
+        let msg = ordersArray.count > 1 ? "Charging Orders ..." : "Charging Order ..."
+        SwiftSpinner.show(msg)
         
-        // get customer_card_id and customer_id
+        failedCount = 0
         
-        let parameters: Parameters = [
-            "idempotency_key": randomString(length: 40),
-            "order_id"       : orderId,
-            "amount_money"   : amountMoneyArray,
-            "customer_card_id": cardid,
-            "customer_id"    : customerID,
-            "note"           : note
-        ]
-        
-        let urlForcharge = "https://connect.squareup.com/v2/locations/" + locationid + "/transactions"
-        
-        Alamofire.request(urlForcharge, method: .post, parameters: parameters, headers: headers).responseJSON { response in
-            guard (response.error == nil) else {
-                self.showToast(message: (response.error?.localizedDescription)!)
-                return
-            }
+        for i in 0 ..< ordersArray.count {
             
-            let responseObj = response.value as! [String:Any]
-            self.showToast(message: "Charge Success!")
-            self.afterTransaction()
+            let selectedOrderDic = ordersArray[i] as? NSDictionary
+            
+            let orderId = selectedOrderDic!["id"] as! String
+//            let locationid = selectedOrderDic!["location_id"] as! String
+            let amountMoneyDic = selectedOrderDic!["total_money"] as! NSDictionary
+           
+            let lineItems = selectedOrderDic!["line_items"] as? NSArray
+            let lineItem0 = lineItems![0] as? NSDictionary
+            let itemName = lineItem0!["name"] as? String
+            
+            let note = "\(itemName!)  Order"
+
+            let params: [String:Any] = [
+                "idempotency_key": randomString(length: 40),
+                "order_id"       : orderId,
+                "amount_money"   : amountMoneyDic,
+                "customer_card_id": cardid,
+                "customer_id"    : customerID,
+                "note"           : note
+            ]
+            
+            let urlStr = "https://connect.squareup.com/v2/locations/\(location_ID)/transactions"
+       
+            myGroup.enter()
+            //
+            // send request to make transaction
+            self.sendRequest(urlStr: urlStr, params: params, atIndex: i)
             
         }
+        
+        myGroup.notify(queue: .main) {
+            SwiftSpinner.hide()
+            if self.isSuccess {
+                self.showToast(message: self.successMsg)
+                self.updateOrdersDB()
+                self.afterTransaction()
+            } else
+            {
+                self.showToast(message: "Something went wrong.")
+                self.requestbtn.isEnabled = true
+                self.requestbtn.alpha = 1.0
+            }
+            
+        }
+        
+    }
+    
+    func sendRequest(urlStr: String, params: Parameters, atIndex: Int) {
+        do {
+            let postData = try JSONSerialization.data(withJSONObject: params, options: [])
+            
+            let request = NSMutableURLRequest(url: NSURL(string: urlStr)! as URL,
+                                              cachePolicy: .useProtocolCachePolicy,
+                                              timeoutInterval: 30.0)
+            request.httpMethod = "POST"
+            request.allHTTPHeaderFields = headers
+            request.httpBody = postData as Data
+            
+            let session = URLSession.shared
+            let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in
+                if (error != nil) {
+                    print(error ?? "")
+                    self.failedCount += 1
+                } else {
+                    let httpResponse = response as? HTTPURLResponse
+                    print(httpResponse ?? "")
+                    do {
+                        let json = try JSONSerialization.jsonObject(with: data!, options: []) as? [String : Any]
+                        print("---success \(atIndex)---")
+                        self.ordersArray.removeObject(at: self.failedCount)
+                        self.isSuccess = true
+                        self.successMsg = "Success"
+                        
+                        print(json ?? "")
+                        // store transaction in firebase
+                        
+                    }catch(let e){
+                        print(e)
+                    }
+                }
+                
+                self.myGroup.leave()
+            })
+            
+            dataTask.resume()            //
+        }catch (let i) {
+            print(i)
+        }
+    }
+    
+    func updateOrdersDB() {
+        
+        let ordersRef = Database.database().reference(withPath: "orders").child(currentCardsNum)
+        ordersRef.setValue(ordersArray)
     }
     
     func randomString(length: Int) -> String {

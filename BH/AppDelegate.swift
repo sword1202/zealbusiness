@@ -14,14 +14,17 @@ import SquarePointOfSaleSDK
 import SwiftSpinner
 import Alamofire
 
-var deviceuidString = "initial value"
+let SANDBOX_MODE = false
+var deviceuidString = ""
+var currentCardsNum = SANDBOX_MODE ? "4311" : ""
 var cardsForThisDevice = NSMutableArray()
-let locationID = "F3EX7FBKDMY0E" // there is an id at the moment
-let accessToken = "sq0atp-wXX9R-mHWTTSQtcLhwKQbw"
-let headerStr = "Bearer " + accessToken
+let location_ID = "F3EX7FBKDMY0E" // there is an id at the moment
+let accessToken_ = "sq0atp-wXX9R-mHWTTSQtcLhwKQbw"
+let headerStr = "Bearer \(accessToken_)"
 let headers: HTTPHeaders = [
     "Authorization": headerStr,
-    "Accept": "application/json"
+    "Accept": "application/json",
+    "Content-Type" : "application/json"
 ]
 
 @UIApplicationMain
@@ -34,9 +37,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         FirebaseApp.configure()
         
         deviceuidString = UIDevice.current.identifierForVendor!.uuidString
-        print(cardsForThisDevice)
         scanCustomersDB()
-
+//        self.grabDetailsByLast4Digits(last4digits: "4311")
         return true
     }
         
@@ -145,7 +147,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     }
 
     func completedTransactionWithSuccess(transactionId: String?){
-        NotificationCenter.default.post(Notification(name: Notification.Name(rawValue: "TransactionDone"), object: nil, userInfo: nil))
         
         guard let transactionId = transactionId else {
             return
@@ -153,7 +154,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         // find last 4 and store
         
-        let urlForTransactionDetails = "https://connect.squareup.com/v2/locations/" + locationID + "/transactions/" + transactionId
+        let urlForTransactionDetails = "https://connect.squareup.com/v2/locations/" + location_ID + "/transactions/" + transactionId
         
         Alamofire.request(urlForTransactionDetails, headers: headers).responseJSON { response in
             guard (response.error == nil) else {
@@ -168,20 +169,37 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             let card = cardDetail["card"] as! NSDictionary
             let last4 = card["last_4"] as! String
             
-            // store
-            let startIndex = transactionId.index(transactionId.startIndex, offsetBy: 4)
-            let str = String(transactionId[...startIndex])
+            currentCardsNum = last4
             
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "MM-dd" // 04-22
-            let stringFromDate = dateFormatter.string(from: Date())
-            let transaction_ = Transaction(transactionId: str, timeStamp: stringFromDate)
-            transaction_.addTransactionToFireBase(with: User(uid: "", nameId: last4, emailId: "" ))
+            // store
+            
+            self.storeTransactioninFirebase(transaction: transaction)
+            
+            NotificationCenter.default.post(Notification(name: Notification.Name(rawValue: "TransactionDone"), object: nil, userInfo: nil))
             
             // search customer details in database by last4 and create or update customer on Squareup
-            self.grabDetailsByLast4Digits(last4digits: last4)
+//            self.grabDetailsByLast4Digits(last4digits: last4)
         }
         
+    }
+    
+    func storeTransactioninFirebase(transaction: NSDictionary) {
+        let transaction_id = transaction["id"] as! String
+        let createdStr = transaction["created_at"] as! String
+
+        // for transaction id
+        
+        let str = String(transaction_id.prefix(5))
+        
+        // for date
+
+        let startIndex = createdStr.index(createdStr.startIndex, offsetBy: 5)
+        let endIndex = createdStr.index(createdStr.endIndex, offsetBy: -10)
+        let range = startIndex..<endIndex
+        let strDate = String(createdStr[range])
+        
+        let transaction_ = Transaction(transactionId: str, timeStamp: strDate)
+        transaction_.addTransactionToFireBase(with: User(uid: "", nameId: currentCardsNum, emailId: "" ))
     }
     
     func grabDetailsByLast4Digits(last4digits: String?) {
@@ -198,13 +216,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 let financialDB = userObj["financial_db"] as? NSDictionary
                 for (_, values) in financialDB! {
                     let bankDetailsDic = values as! NSDictionary
-                    let accounts = bankDetailsDic["accounts"] as? NSArray
-                    let account = accounts?.object(at: 0) as? NSDictionary
-                    let consumerCardNumber = account!["mask"] as? String
-                    if last4digits == consumerCardNumber {
-                        userName = userObj["name"] as! String
-                        userEmail = userObj["email"] as! String
-                        break
+                    let accounts = bankDetailsDic["accounts"] as! NSArray
+                    for i in 0 ..< accounts.count {
+                        let account = accounts.object(at: i) as? NSDictionary
+                        let consumerCardNumber = account!["mask"] as! String
+                        if last4digits == consumerCardNumber {
+                            userName = userObj["name"] as! String
+//                            userEmail = userObj["email"] as! String
+                            break
+                        }
                     }
                 }
                 

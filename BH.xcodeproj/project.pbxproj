@@ -25,21 +25,8 @@
 		3ED5D6E81E9D0D9C00DCAE3E /* NFCRequestViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5D6E71E9D0D9C00DCAE3E /* NFCRequestViewController.swift */; };
 		3ED5D6EE1E9D124700DCAE3E /* checkinViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ED5D6ED1E9D124700DCAE3E /* checkinViewController.swift */; };
 		6C4997A020041238004449EA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6C49979F20041237004449EA /* Assets.xcassets */; };
-		79FF9C5F856A8F8E0BB22F1C /* Pods_BH.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30AAE2BCA0EA3CF6F49D2903 /* Pods_BH.framework */; };
+		6C60CEEA204C0E0F0066B85A /* Pods_BH.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6C60CEEB204C0E0F0066B85A /* Pods_BH.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		3E13290F1E9C684B00F9194F /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		0F150A9E1E3D237500D1D23F /* BH.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BH.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,6 +51,7 @@
 		3ED5D6E71E9D0D9C00DCAE3E /* NFCRequestViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = NFCRequestViewController.swift; sourceTree = "<group>"; };
 		3ED5D6ED1E9D124700DCAE3E /* checkinViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = checkinViewController.swift; sourceTree = "<group>"; };
 		6C49979F20041237004449EA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		6C60CEEB204C0E0F0066B85A /* Pods_BH.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_BH.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		6CCF2FC01FFE6CE0006DAB76 /* BH.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BH.entitlements; sourceTree = "<group>"; };
 		BF79A16F655B625EE6E5A92B /* Pods-BH.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-BH.debug.xcconfig"; path = "Pods/Target Support Files/Pods-BH/Pods-BH.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -73,7 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				79FF9C5F856A8F8E0BB22F1C /* Pods_BH.framework in Frameworks */,
+				6C60CEEA204C0E0F0066B85A /* Pods_BH.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,6 +148,7 @@
 		53B35B3ADCAB5855628B8129 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6C60CEEB204C0E0F0066B85A /* Pods_BH.framework */,
 				30AAE2BCA0EA3CF6F49D2903 /* Pods_BH.framework */,
 			);
 			name = Frameworks;
@@ -187,7 +176,6 @@
 				0F150A9C1E3D237500D1D23F /* Resources */,
 				33E2689BE5E1D38407EBE2E6 /* [CP] Embed Pods Frameworks */,
 				AB9165314F8351C32E5B8C62 /* [CP] Copy Pods Resources */,
-				3E13290F1E9C684B00F9194F /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -263,6 +251,7 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-BH/Pods-BH-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/AFNetworking/AFNetworking.framework",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMOAuth2/GTMOAuth2.framework",
 				"${BUILT_PRODUCTS_DIR}/GTMSessionFetcher/GTMSessionFetcher.framework",
@@ -274,6 +263,7 @@
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/AFNetworking.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMOAuth2.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GTMSessionFetcher.framework",
@@ -468,6 +458,7 @@
 				CODE_SIGN_ENTITLEMENTS = BH/BH.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = U3DJW66E3Y;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = NO;
 				INFOPLIST_FILE = BH/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -488,6 +479,7 @@
 				CODE_SIGN_ENTITLEMENTS = BH/BH.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				DEVELOPMENT_TEAM = U3DJW66E3Y;
+				EMBED_ASSET_PACKS_IN_PRODUCT_BUNDLE = NO;
 				INFOPLIST_FILE = BH/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

@@ -13,4 +13,5 @@ target 'BH' do
     pod 'SwiftSpinner'
     pod 'SquarePointOfSaleSDK'
     pod 'Alamofire'
+    pod 'AFNetworking'
 end
