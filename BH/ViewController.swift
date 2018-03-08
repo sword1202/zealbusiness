@@ -13,9 +13,9 @@ import GoogleSignIn
 import FirebaseDatabase
 import SwiftSpinner
 
-//let yourClientID = "sq0idp-EGZH_3HkuU5djPZvFoJJyw"
-//let yourClientID = "sandbox-sq0idp-EGZH_3HkuU5djPZvFoJJyw"
-//let yourCallbackURL = URL(string: "bhdesign://callback")!
+//let client_id = "sq0idp-EGZH_3HkuU5djPZvFoJJyw"
+//let client_id = "sandbox-sq0idp-EGZH_3HkuU5djPZvFoJJyw"
+//let callback_url = URL(string: "bhdesign://callback")!
 //
 //let allTenderTypes: [SCCAPIRequestTenderTypes] = [.card, .cash, .other, .squareGiftCard, .cardOnFile]
 
@@ -46,7 +46,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        SCCAPIRequest.setClientID(yourClientID)
+        SCCAPIRequest.setClientID(client_id)
    
         NotificationCenter.default.addObserver(self, selector: #selector(transactionDone), name: NSNotification.Name(rawValue: "TransactionDone"), object: nil)
 
@@ -70,7 +70,7 @@ class ViewController: UIViewController {
    
   
     func oAuth(){
-        guard let oauthURL = URL(string: "https://squareup.com/oauth2/authorize?client_id=\(yourClientID)&scope=PAYMENTS_WRITE&response_type=token") else {
+        guard let oauthURL = URL(string: "https://squareup.com/oauth2/authorize?client_id=\(client_id)&scope=PAYMENTS_WRITE&response_type=token") else {
             return
         }
         
@@ -107,7 +107,7 @@ class ViewController: UIViewController {
         
         let request: SCCAPIRequest
         do {
-            request = try SCCAPIRequest(callbackURL: yourCallbackURL,
+            request = try SCCAPIRequest(callbackURL: callback_url,
                                         amount: amount,
                                         userInfoString: userInfoString,
                                         merchantID: merchantID,

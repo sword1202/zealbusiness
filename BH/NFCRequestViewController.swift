@@ -15,12 +15,8 @@ import SwiftSpinner
 import Alamofire
 
 //// FIXME: Replace this with the Application ID found in the Square Application Dashboard [https://connect.squareup.com/apps].
-let yourClientID = "sq0idp-EGZH_3HkuU5djPZvFoJJyw"
-
-// let yourClientID = "sandbox-sq0idp-EGZH_3HkuU5djPZvFoJJyw" // commerce-v2
-// FIXME: Replace with your app's callback URL as set in the Square Application Dashboard [https://connect.squareup.com/apps]
-// You must also declare this URL scheme in HelloCharge-Swift-Info.plist, under URL types.
-let yourCallbackURL = URL(string: "bhdesign://callback")!
+let client_id = "sq0idp-EGZH_3HkuU5djPZvFoJJyw"
+let callback_url = URL(string: "bhdesign://callback")!
 
 let allTenderTypes: [SCCAPIRequestTenderTypes] = [.card, .cash, .other, .squareGiftCard, .cardOnFile]
 
@@ -65,7 +61,7 @@ class NFCRequestViewController: UIViewController {
         homebtn.layer.cornerRadius=5
         
         
-        SCCAPIRequest.setClientID(yourClientID)
+        SCCAPIRequest.setClientID(client_id)
         NotificationCenter.default.addObserver(self, selector: #selector(transactionDone), name: NSNotification.Name(rawValue: "TransactionDone"), object: nil)
 
         showPOSLoginAlertIfFirstLogin()
@@ -173,7 +169,7 @@ class NFCRequestViewController: UIViewController {
         
         var request: SCCAPIRequest
         do {
-            request = try SCCAPIRequest(callbackURL                    : yourCallbackURL,
+            request = try SCCAPIRequest(callbackURL                    : callback_url,
                                         amount                         : amount,
                                         userInfoString                 : userInfoString,
                                         locationID                     : location_ID,

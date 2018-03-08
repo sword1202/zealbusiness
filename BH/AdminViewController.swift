@@ -37,7 +37,7 @@ class AdminViewController: UIViewController
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        SCCAPIRequest.setClientID(yourClientID)
+        SCCAPIRequest.setClientID(client_id)
         tableview.delegate = self
         tableview.dataSource = self
         
@@ -137,7 +137,7 @@ class AdminViewController: UIViewController
     }
     
     func oAuth(){
-        guard let oauthURL = URL(string: "https://squareup.com/oauth2/authorize?client_id=\(yourClientID)&scope=PAYMENTS_WRITE&response_type=token") else {
+        guard let oauthURL = URL(string: "https://squareup.com/oauth2/authorize?client_id=\(client_id)&scope=PAYMENTS_WRITE&response_type=token") else {
             return
         }
         

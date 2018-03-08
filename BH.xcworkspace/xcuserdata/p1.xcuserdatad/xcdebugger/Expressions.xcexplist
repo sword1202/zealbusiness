@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "closure #1 in NFCRequestViewController.chargeForOder():NFCRequestViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "NFCRequestViewController.chargeForOder():NFCRequestViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "cardid">
+            </PersistentString>
+            <PersistentString
+               value = "customerID">
+            </PersistentString>
+            <PersistentString
+               value = "orderId">
+            </PersistentString>
+            <PersistentString
+               value = "amountMoneyDic">
+            </PersistentString>
+            <PersistentString
+               value = "note">
+            </PersistentString>
+            <PersistentString
+               value = "randomString(length: 40)">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>
